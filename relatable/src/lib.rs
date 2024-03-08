@@ -99,16 +99,16 @@ fn add_tags_to_graph(
                         for tag in read_tagfile(&tagfile)? {
                             trace!("Tagfile contains tag {}", tag);
                             let t = tag_graph.get_node_move(TagGraphNode::Tag(tag.clone()));
-                            tag_graph.graph.update_edge(tag_root, t, Relation::Tag);
-                            tag_graph.graph.update_edge(tag_root, t, Relation::Tag);
+                            tag_graph.graph.update_edge(tag_root, t, Relation::HasTag);
+                            tag_graph.graph.update_edge(tag_root, t, Relation::HasTag);
                             for attach_target in &tag_attach_targets {
                                 trace!("Attaching tag {:?} to {:?}", t, attach_target);
                                 tag_graph
                                     .graph
-                                    .update_edge(*attach_target, t, Relation::Tag);
+                                    .update_edge(*attach_target, t, Relation::HasTag);
                                 tag_graph
                                     .graph
-                                    .update_edge(t, *attach_target, Relation::Tag);
+                                    .update_edge(t, *attach_target, Relation::TagAssignedTo);
                             }
                         }
                     }
@@ -241,7 +241,12 @@ pub enum TagGraphNode {
 
 #[derive(Debug, Hash, Clone, Eq, PartialEq)]
 pub enum Relation {
+    // Directory/File A's parent is B
     Parent,
+    // Directory B contains A
     Child,
-    Tag,
+    // Directory/File A has tag B
+    HasTag,
+    // Tag A has been assigned to B
+    TagAssignedTo,
 }

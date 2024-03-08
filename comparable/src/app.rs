@@ -3,7 +3,7 @@ use egui_graphs::{
     SettingsStyle,
 };
 use relatable::{
-    petgraph::{csr::DefaultIx, data::DataMap, visit::{EdgeRef, IntoEdgeReferences, IntoNodeReferences, NodeRef}, Directed},
+    petgraph::{self, algo::{dijkstra, Measure}, csr::DefaultIx, data::DataMap, visit::{depth_first_search, Bfs, DfsEvent, EdgeFiltered, EdgeRef, IntoEdgeReferences, IntoNodeReferences, NodeRef, Walker}, Directed},
     HashSetGraph, Relation, TagGraphNode,
 };
 
@@ -54,6 +54,27 @@ impl eframe::App for TemplateApp {
                 ui.label(format!("node {:?}", node.id()));
                 let data = self.relatable_graph.graph.node_weight(*node);
                 ui.label(format!("node {}", node.index()));
+                
+                // Get all the tags assigned to the selected node
+                let tag_graph = EdgeFiltered::from_fn(&self.relatable_graph.graph, |edge| {
+                    match edge.weight(){
+                        Relation::Parent => true,
+                        Relation::HasTag => true,
+                        Relation::TagAssignedTo => false,
+                        Relation::Child => false
+                    }
+                });
+
+                let mut tags = vec![];
+                let mut bfs = Bfs::new(&tag_graph, *node);
+                while let Some(n) = bfs.next(&tag_graph) {
+                    if let TagGraphNode::Tag(tag) = &self.relatable_graph.graph[n]{
+                        tags.push(tag.clone());
+                    }
+                }
+
+                ui.label(tags.join(", "));
+                
             }
             // for edge in self.graph.selected_edges() {
             //     ui.label(format!("edge {}: {:?}", edge.index(), edge.()));
