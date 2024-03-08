@@ -3,7 +3,7 @@ use egui_graphs::{
     SettingsStyle,
 };
 use relatable::{
-    petgraph::{csr::DefaultIx, visit::{EdgeRef, IntoEdgeReferences, IntoNodeReferences, NodeRef}, Directed},
+    petgraph::{csr::DefaultIx, data::DataMap, visit::{EdgeRef, IntoEdgeReferences, IntoNodeReferences, NodeRef}, Directed},
     HashSetGraph, Relation, TagGraphNode,
 };
 
@@ -22,7 +22,13 @@ impl TemplateApp {
         let mut graph: Graph<TagGraphNode, Relation, Directed, DefaultIx, DefaultNodeShape, DefaultEdgeShape> = (&relatable_graph.graph).into();
 
         for (index, weight) in relatable_graph.graph.node_references() {
-            graph.node_mut(index).unwrap().set_label(format!("{:?}", weight));
+            graph.node_mut(index).unwrap().set_label(match weight{
+                TagGraphNode::File { path } => path.file_name().expect("a file node should have a filename").to_string_lossy().to_string(),
+                TagGraphNode::Directory { path } => format!("{}/", path.file_name().expect("a directory node should have a name").to_string_lossy()),
+                TagGraphNode::RootDirectory => "ROOT_DIR".to_string(),
+                TagGraphNode::RootTag => "ROOT_TAG".to_string(),
+                TagGraphNode::Tag(t) => format!("[{}]", t),
+            });
         }
 
         for e in relatable_graph.graph.edge_references() {
@@ -45,7 +51,9 @@ impl eframe::App for TemplateApp {
 
         egui::TopBottomPanel::bottom("bottom_panel").show(ctx, |ui| {
             for node in self.graph.selected_nodes() {
-                ui.label(format!("node {}: {:?}", node.index(), node.weight()));
+                ui.label(format!("node {:?}", node.id()));
+                let data = self.relatable_graph.graph.node_weight(*node);
+                ui.label(format!("node {}", node.index()));
             }
             // for edge in self.graph.selected_edges() {
             //     ui.label(format!("edge {}: {:?}", edge.index(), edge.()));
