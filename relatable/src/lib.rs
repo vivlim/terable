@@ -1,6 +1,6 @@
-use std::{collections::{hash_set, HashMap, HashSet}, fs::File, io::{self, BufRead}, path::{Path, PathBuf}};
+use std::{collections::{hash_set, HashMap, HashSet}, fs::{self, File}, io::{self, BufRead}, path::{Path, PathBuf}};
 use glob::glob;
-use log::{trace, warn};
+use log::{error, trace, warn};
 use ::petgraph::stable_graph::StableGraph;
 use petgraph::{adj::EdgeIndex, data::Build, graph::{self, NodeIndex}, visit::GraphBase, Directed, Graph, Undirected};
 use thiserror::Error;
@@ -13,6 +13,8 @@ pub mod petgraph {
 pub enum Error {
     #[error("oh no! {0}")]
     OhNo(String),
+    #[error("error msg: {0}")]
+    ErrMsg(&'static str),
     #[error(transparent)]
     IO(#[from] std::io::Error)
 }
@@ -43,22 +45,30 @@ pub fn get_tagged_files(root: &str) -> Result<HashSetGraph<TagGraphNode, Relatio
                         }
                         else {
                             // Files with the matching name
-                            let name_without_tags_suffix = tagfile.file_stem().unwrap();
-                            let pattern = format!("{}*", dirpath.join(name_without_tags_suffix).to_string_lossy());
-                            trace!("Searching for matching files with pattern {}", pattern);
-                            for target_file in glob(&pattern).expect("Failed to read glob pattern") {
-                                match target_file {
-                                    Ok(target_file) => {
-                                        let target_file_path = target_file.as_path().canonicalize()?;
-                                        trace!("Found file {}", target_file_path.to_string_lossy());
-                                        let t = tag_graph.get_node_move(TagGraphNode::File { path: target_file_path });
+                            let tagfile_stem = tagfile.file_stem().unwrap();
+                            let mut found = false;
+                            for path in fs::read_dir(dirpath)?{
+                                if let Ok(path) = path {
+                                    let file_path = path.path();
+                                    if let Some(ext) = file_path.extension(){
+                                        // Don't associate a tagfile with itself
+                                        if ext == "tags" {
+                                            continue;
+                                        }
+                                    }
+                                    let file_stem = file_path.file_stem().unwrap();
+                                    let file_name = file_path.file_name().unwrap();
+                                    if file_stem == tagfile_stem || file_name == tagfile_stem {
+                                        found = true;
+                                        trace!("Found file {}", file_path.to_string_lossy());
+                                        let t = tag_graph.get_node_move(TagGraphNode::File { path: file_path });
                                         trace!("   ... assigned it {:?}", t);
                                         tag_attach_targets.push(t);
-                                    },
-                                    Err(e) => {
-                                        warn!("error while looking for matching files: {:?}", e);
                                     }
                                 }
+                            }
+                            if !found {
+                                warn!("Tag file {:?} has no associated files", tagfile)
                             }
                         }
 
