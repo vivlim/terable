@@ -2,4 +2,5 @@
 members = [
     "terable",
     "relatable",
+    "comparable",
 ]

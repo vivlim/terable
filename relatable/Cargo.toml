@@ -8,4 +8,5 @@ edition = "2021"
 [dependencies]
 thiserror = "1.0"
 glob = "0.3"
-petgraph = "0.6"
+petgraph = { version = "0.6", default-features = false, features = ["stable_graph", "matrix_graph"] }
+log = "0.4"

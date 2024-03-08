@@ -1,0 +1,88 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug executable 'terable'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin=terable",
+                    "--package=terable"
+                ],
+                "filter": {
+                    "name": "terable",
+                    "kind": "bin"
+                }
+            },
+            "env": {
+                "RUST_LOG": "trace",
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug executable 'comparable'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin=comparable",
+                    "--package=comparable"
+                ],
+                "filter": {
+                    "name": "comparable",
+                    "kind": "bin"
+                }
+            },
+            "env": {
+                "RUST_LOG": "relatable=trace,comparable=trace",
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in executable 'terable'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--bin=terable",
+                    "--package=terable"
+                ],
+                "filter": {
+                    "name": "terable",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in library 'relatable'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--lib",
+                    "--package=relatable"
+                ],
+                "filter": {
+                    "name": "relatable",
+                    "kind": "lib"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        }
+    ]
+}

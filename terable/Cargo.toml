@@ -10,3 +10,5 @@ anyhow = "1.0"
 tera = "1.0"
 comrak = "0.21"
 relatable = { path = "../relatable"}
+log = "0.4.21"
+env_logger = "0.11.3"
